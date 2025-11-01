@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockMaster Pro - ระบบจัดการสต็อกขั้นสุด</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --bg: #f5f7fb;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+        
+        .dark-mode {
+            --primary: #4cc9f0;
+            --secondary: #3a86ff;
+            --success: #38b000;
+            --warning: #ff0054;
+            --light: #1e1e1e;
+            --dark: #f8f9fa;
+            --gray: #b0b0b0;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --shadow: rgba(255, 255, 255, 0.05);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--dark);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            min-height: 100vh;
+            box-shadow: 0 0 20px var(--shadow);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .logo i {
+            font-size: 1.5rem;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .user-actions i {
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .user-actions i:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--shadow);
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 0.9rem;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Pages */
+        .page {
+            display: none;
+            padding: 1rem;
+            padding-bottom: 70px;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Dashboard */
+        .dashboard {
+            padding: 1rem;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 5px 15px var(--shadow);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+        
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .section-title {
+            margin: 25px 0 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .see-all {
+            font-size: 0.9rem;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .see-all:hover {
+            transform: translateX(3px);
+        }
+        
+        /* Product List */
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 4px 12px var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px var(--shadow);
+        }
+        
+        .product-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-info {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        .product-sku {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .product-stock {
+            text-align: right;
+        }
+        
+        .stock-value {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        .stock-low {
+            color: var(--warning);
+        }
+        
+        .stock-ok {
+            color: var(--success);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s, box-shadow 0.3s;
+            background: var(--card-bg);
+            color: var(--dark);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 450px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.4s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--dark);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .close-modal:hover {
+            color: var(--warning);
+        }
+        
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+        }
+        
+        .toast {
+            background: var(--card-bg);
+            color: var(--dark);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 280px;
+            animation: slideIn 0.4s ease-out;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toast .close-toast {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .toast .close-toast:hover {
+            color: var(--dark);
+        }
+        
+        /* Product Actions */
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .action-btn {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+        
+        .action-btn i {
+            font-size: 2.2rem;
+            color: var(--primary);
+        }
+        
+        .action-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -5px 15px var(--shadow);
+            max-width: 480px;
+            margin: 0 auto;
+            z-index: 90;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--gray);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .nav-item i {
+            font-size: 1.3rem;
+        }
+        
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            background: var(--light);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 3px 10px var(--shadow);
+        }
+        
+        .search-bar i {
+            color: var(--gray);
+        }
+        
+        .search-bar input {
+            border: none;
+            background: transparent;
+            flex: 1;
+            outline: none;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        
+        /* Add Button */
+        .add-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+            font-size: 1.8rem;
+            z-index: 10;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5);
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            padding: 10px 15px;
+            border-radius: 10px;
+            background: var(--light);
+            color: var(--dark);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Stock Movements */
+        .movements-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .movement-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 3px 10px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .movement-info {
+            flex: 1;
+        }
+        
+        .movement-product {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .movement-details {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .movement-amount {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .movement-in {
+            color: var(--success);
+        }
+        
+        .movement-out {
+            color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-boxes"></i>
+                <span>StockMaster Pro</span>
+            </div>
+            <div class="user-actions">
+                <i id="darkModeBtn" class="fas fa-moon"></i>
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-target="dashboard">ภาพรวม</div>
+            <div class="nav-tab" data-target="products">สินค้า</div>
+            <div class="nav-tab" data-target="movements">เคลื่อนไหว</div>
+            <div class="nav-tab" data-target="reports">รายงาน</div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard">
+            <div class="dashboard">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <i class="fas fa-boxes"></i>
+                        <div class="stat-value" id="total-products">0</div>
+                        <div class="stat-label">สินค้าทั้งหมด</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="stat-value" id="low-stock-count">0</div>
+                        <div class="stat-label">สินค้าใกล้หมด</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div class="stat-value" id="today-sales">0</div>
+                        <div class="stat-label">ขายวันนี้</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div class="stat-value" id="today-revenue">0</div>
+                        <div class="stat-label">รายได้วันนี้</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <span>สินค้าใกล้หมด</span>
+                    <span class="see-all">ดูทั้งหมด</span>
+                </div>
+                
+                <div class="product-list" id="low-stock-products">
+                    <!-- Low stock products will be dynamically added here -->
+                </div>
+                
+                <div class="section-title">
+                    <span>การเคลื่อนไหวล่าสุด</span>
+                    <span class="see-all">ดูทั้งหมด</span>
+                </div>
+                
+                <div class="movements-list" id="recent-movements">
+                    <!-- Recent movements will be dynamically added here -->
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="action-btn" id="add-product-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        <div class="action-label">เพิ่มสินค้า</div>
+                    </div>
+                    <div class="action-btn" id="stock-in-btn">
+                        <i class="fas fa-arrow-down"></i>
+                        <div class="action-label">รับสินค้าเข้า</div>
+                    </div>
+                    <div class="action-btn" id="stock-out-btn">
+                        <i class="fas fa-arrow-up"></i>
+                        <div class="action-label">เบิกสินค้าออก</div>
+                    </div>
+                    <div class="action-btn" id="barcode-btn">
+                        <i class="fas fa-barcode"></i>
+                        <div class="action-label">สแกนบาร์โค้ด</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Page -->
+        <div class="page" id="products">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-product" placeholder="ค้นหาสินค้า...">
+            </div>
+            
+            <div class="filter-section">
+                <button class="filter-btn active" data-filter="all">ทั้งหมด</button>
+                <button class="filter-btn" data-filter="low">ใกล้หมด</button>
+                <button class="filter-btn" data-filter="ok">ปกติ</button>
+            </div>
+            
+            <div class="product-list" id="all-products">
+                <!-- All products will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Movements Page -->
+        <div class="page" id="movements">
+            <div class="section-title">ประวัติการเคลื่อนไหว</div>
+            
+            <div class="filter-section">
+                <button class="filter-btn active" data-movement="all">ทั้งหมด</button>
+                <button class="filter-btn" data-movement="in">รับเข้า</button>
+                <button class="filter-btn" data-movement="out">เบิกออก</button>
+            </div>
+            
+            <div class="movements-list" id="all-movements">
+                <!-- All movements will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Reports Page -->
+        <div class="page" id="reports">
+            <div class="section-title">รายงานสรุป</div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="stat-value" id="monthly-sales">0</div>
+                    <div class="stat-label">ยอดขายเดือนนี้</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-box-open"></i>
+                    <div class="stat-value" id="total-sold">0</div>
+                    <div class="stat-label">สินค้าที่ขายได้</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-truck"></i>
+                    <div class="stat-value" id="stock-ins">0</div>
+                    <div class="stat-label">รับสินค้าเข้า</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-value" id="new-customers">0</div>
+                    <div class="stat-label">ลูกค้าใหม่</div>
+                </div>
+            </div>
+            
+            <div class="section-title">กราฟสรุปสต็อก</div>
+            
+            <div class="chart-container">
+                <canvas id="stockChart"></canvas>
+            </div>
+            
+            <div class="section-title">สินค้าขายดี</div>
+            
+            <div class="product-list" id="top-products">
+                <!-- Top products will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Add Product Modal -->
+        <div class="modal" id="product-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">เพิ่มสินค้าใหม่</div>
+                    <button class="close-modal">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">ชื่อสินค้า</label>
+                    <input type="text" class="form-control" id="product-name" placeholder="กรอกชื่อสินค้า">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">SKU</label>
+                    <input type="text" class="form-control" id="product-sku" placeholder="กรอกรหัส SKU">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">หมวดหมู่</label>
+                    <select class="form-control" id="product-category">
+                        <option value="">เลือกหมวดหมู่</option>
+                        <option value="สมาร์ทโฟน">สมาร์ทโฟน</option>
+                        <option value="แลปท็อป">แลปท็อป</option>
+                        <option value="หูฟัง">หูฟัง</option>
+                        <option value="แท็บเล็ต">แท็บเล็ต</option>
+                        <option value="อุปกรณ์เสริม">อุปกรณ์เสริม</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">จำนวนในสต็อก</label>
+                    <input type="number" class="form-control" id="product-stock" placeholder="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">ราคา</label>
+                    <input type="number" class="form-control" id="product-price" placeholder="0.00" min="0" step="0.01">
+                </div>
+                
+                <button class="btn btn-primary" id="save-product">
+                    <i class="fas fa-save"></i>
+                    บันทึกสินค้า
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stock Movement Modal -->
+        <div class="modal" id="movement-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="movement-title">รับสินค้าเข้า</div>
+                    <button class="close-modal">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">สินค้า</label>
+                    <select class="form-control" id="movement-product">
+                        <option value="">เลือกสินค้า</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">จำนวน</label>
+                    <input type="number" class="form-control" id="movement-quantity" placeholder="0" min="1">
+                </div>
+                
+                <div class="form-group" id="movement-reason-container">
+                    <label class="form-label">เหตุผล</label>
+                    <select class="form-control" id="movement-reason">
+                        <option value="ซื้อเข้า">ซื้อเข้า</option>
+                        <option value="รับคืน">รับคืน</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="movement-out-reason-container" style="display: none;">
+                    <label class="form-label">เหตุผล</label>
+                    <select class="form-control" id="movement-out-reason">
+                        <option value="ขาย">ขาย</option>
+                        <option value="สินค้าชำรุด">สินค้าชำรุด</option>
+                        <option value="ตัวอย่าง">ตัวอย่าง</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" id="save-movement">
+                    <i class="fas fa-check"></i>
+                    ยืนยัน
+                </button>
+            </div>
+        </div>
+        
+        <!-- Toast Container -->
+        <div class="toast-container" id="toast-container"></div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-target="dashboard">
+                <i class="fas fa-home"></i>
+                <span>หน้าหลัก</span>
+            </div>
+            <div class="nav-item" data-target="products">
+                <i class="fas fa-boxes"></i>
+                <span>สินค้า</span>
+            </div>
+            <div class="nav-item" data-target="movements">
+                <i class="fas fa-exchange-alt"></i>
+                <span>เคลื่อนไหว</span>
+            </div>
+            <div class="nav-item" data-target="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>รายงาน</span>
+            </div>
+        </div>
+        
+        <!-- Add Button -->
+        <div class="add-btn" id="floating-add-btn">
+            <i class="fas fa-plus"></i>
+        </div>
+    </div>
+
+    <script>
+        // Initialize data
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        let movements = JSON.parse(localStorage.getItem('movements')) || [];
+        let stockChart = null;
+        
+        // DOM Elements
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
+        const productModal = document.getElementById('product-modal');
+        const movementModal = document.getElementById('movement-modal');
+        const closeModals = document.querySelectorAll('.close-modal');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const stockInBtn = document.getElementById('stock-in-btn');
+        const stockOutBtn = document.getElementById('stock-out-btn');
+        const floatingAddBtn = document.getElementById('floating-add-btn');
+        const saveProductBtn = document.getElementById('save-product');
+        const saveMovementBtn = document.getElementById('save-movement');
+        const searchProduct = document.getElementById('search-product');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const movementFilterBtns = document.querySelectorAll('[data-movement]');
+        const toastContainer = document.getElementById('toast-container');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            updateDashboard();
+            renderProducts();
+            renderMovements();
+            renderChart();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+        
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Dark mode toggle
+            darkModeBtn.addEventListener('click', toggleDarkMode);
+            
+            // Navigation
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.target));
+            });
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', () => switchTab(item.dataset.target));
+            });
+            
+            // Modal controls
+            addProductBtn.addEventListener('click', () => openProductModal());
+            stockInBtn.addEventListener('click', () => openMovementModal('in'));
+            stockOutBtn.addEventListener('click', () => openMovementModal('out'));
+            floatingAddBtn.addEventListener('click', () => openProductModal());
+            
+            closeModals.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    productModal.classList.remove('active');
+                    movementModal.classList.remove('active');
+                });
+            });
+            
+            // Save buttons
+            saveProductBtn.addEventListener('click', saveProduct);
+            saveMovementBtn.addEventListener('click', saveMovement);
+            
+            // Search and filters
+            searchProduct.addEventListener('input', renderProducts);
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderProducts();
+                });
+            });
+            
+            movementFilterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    movementFilterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderMovements();
+                });
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === productModal) {
+                    productModal.classList.remove('active');
+                }
+                if (e.target === movementModal) {
+                    movementModal.classList.remove('active');
+                }
+            });
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            darkModeBtn.classList.toggle('fa-moon');
+            darkModeBtn.classList.toggle('fa-sun');
+        }
+        
+        // Switch between tabs/pages
+        function switchTab(target) {
+            // Update navigation tabs
+            navTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.target === target);
+            });
+            
+            // Update bottom navigation
+            navItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.target === target);
+            });
+            
+            // Show the selected page
+            pages.forEach(page => {
+                page.classList.toggle('active', page.id === target);
+            });
+            
+            // Update data if needed
+            if (target === 'reports') {
+                renderChart();
+            }
+        }
+        
+        // Open product modal
+        function openProductModal() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-sku').value = '';
+            document.getElementById('product-category').value = '';
+            document.getElementById('product-stock').value = '';
+            document.getElementById('product-price').value = '';
+            productModal.classList.add('active');
+        }
+        
+        // Open movement modal
+        function openMovementModal(type) {
+            const title = document.getElementById('movement-title');
+            const reasonContainer = document.getElementById('movement-reason-container');
+            const outReasonContainer = document.getElementById('movement-out-reason-container');
+            
+            if (type === 'in') {
+                title.textContent = 'รับสินค้าเข้า';
+                reasonContainer.style.display = 'block';
+                outReasonContainer.style.display = 'none';
+            } else {
+                title.textContent = 'เบิกสินค้าออก';
+                reasonContainer.style.display = 'none';
+                outReasonContainer.style.display = 'block';
+            }
+            
+            // Populate product dropdown
+            const productSelect = document.getElementById('movement-product');
+            productSelect.innerHTML = '<option value="">เลือกสินค้า</option>';
+            
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} (คงเหลือ: ${product.stock})`;
+                productSelect.appendChild(option);
+            });
+            
+            document.getElementById('movement-quantity').value = '';
+            movementModal.classList.add('active');
+        }
+        
+        // Save product
+        function saveProduct() {
+            const name = document.getElementById('product-name').value;
+            const sku = document.getElementById('product-sku').value;
+            const category = document.getElementById('product-category').value;
+            const stock = parseInt(document.getElementById('product-stock').value) || 0;
+            const price = parseFloat(document.getElementById('product-price').value) || 0;
+            
+            if (!name || !sku || !category) {
+                showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+            
+            const newProduct = {
+                id: Date.now().toString(),
+                name,
+                sku,
+                category,
+                stock,
+                price,
+                createdAt: new Date().toISOString()
+            };
+            
+            products.push(newProduct);
+            saveData();
+            productModal.classList.remove('active');
+            showToast('บันทึกสินค้าสำเร็จ!');
+            
+            // Update UI
+            updateDashboard();
+            renderProducts();
+            renderChart();
+        }
+        
+        // Save movement
+        function saveMovement() {
+            const productId = document.getElementById('movement-product').value;
+            const quantity = parseInt(document.getElementById('movement-quantity').value) || 0;
+            const isStockIn = document.getElementById('movement-title').textContent === 'รับสินค้าเข้า';
+            const reason = isStockIn 
+                ? document.getElementById('movement-reason').value 
+                : document.getElementById('movement-out-reason').value;
+            
+            if (!productId || !quantity) {
+                showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+            
+            const product = products.find(p => p.id === productId);
+            
+            if (!isStockIn && product.stock < quantity) {
+                showToast('จำนวนสินค้าไม่เพียงพอ', 'error');
+                return;
+            }
+            
+            // Update product stock
+            if (isStockIn) {
+                product.stock += quantity;
+            } else {
+                product.stock -= quantity;
+            }
+            
+            // Record movement
+            const newMovement = {
+                id: Date.now().toString(),
+                productId,
+                productName: product.name,
+                type: isStockIn ? 'in' : 'out',
+                quantity,
+                reason,
+                date: new Date().toISOString()
+            };
+            
+            movements.push(newMovement);
+            saveData();
+            movementModal.classList.remove('active');
+            showToast(`บันทึกการ${isStockIn ? 'รับสินค้าเข้า' : 'เบิกสินค้าออก'}สำเร็จ!`);
+            
+            // Update UI
+            updateDashboard();
+            renderProducts();
+            renderMovements();
+            renderChart();
+        }
+        
+        // Update dashboard with current data
+        function updateDashboard() {
+            // Update stats
+            document.getElementById('total-products').textContent = products.length;
+            document.getElementById('low-stock-count').textContent = products.filter(p => p.stock < 5).length;
+            
+            // Calculate today's sales and revenue
+            const today = new Date().toDateString();
+            const todayMovements = movements.filter(m => {
+                const movementDate = new Date(m.date).toDateString();
+                return movementDate === today && m.type === 'out' && m.reason === 'ขาย';
+            });
+            
+            const todaySales = todayMovements.reduce((sum, m) => sum + m.quantity, 0);
+            const todayRevenue = todayMovements.reduce((sum, m) => {
+                const product = products.find(p => p.id === m.productId);
+                return sum + (product ? product.price * m.quantity : 0);
+            }, 0);
+            
+            document.getElementById('today-sales').textContent = todaySales;
+            document.getElementById('today-revenue').textContent = todayRevenue.toLocaleString();
+            
+            // Show low stock products
+            const lowStockProducts = products.filter(p => p.stock < 5);
+            const lowStockContainer = document.getElementById('low-stock-products');
+            lowStockContainer.innerHTML = '';
+            
+            if (lowStockProducts.length === 0) {
+                lowStockContainer.innerHTML = '<div class="product-card"><div class="product-info"><div class="product-name">ไม่มีสินค้าใกล้หมด</div></div></div>';
+            } else {
+                lowStockProducts.slice(0, 3).forEach(product => {
+                    const productCard = createProductCard(product);
+                    lowStockContainer.appendChild(productCard);
+                });
+            }
+            
+            // Show recent movements
+            const recentMovements = movements.slice(-5).reverse();
+            const recentMovementsContainer = document.getElementById('recent-movements');
+            recentMovementsContainer.innerHTML = '';
+            
+            if (recentMovements.length === 0) {
+                recentMovementsContainer.innerHTML = '<div class="movement-card"><div class="movement-info"><div class="movement-product">ไม่มีประวัติการเคลื่อนไหว</div></div></div>';
+            } else {
+                recentMovements.forEach(movement => {
+                    const movementCard = createMovementCard(movement);
+                    recentMovementsContainer.appendChild(movementCard);
+                });
+            }
+            
+            // Update report stats
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            
+            const monthlySales = movements.filter(m => {
+                const movementDate = new Date(m.date);
+                return movementDate.getMonth() === thisMonth && 
+                       movementDate.getFullYear() === thisYear && 
+                       m.type === 'out' && 
+                       m.reason === 'ขาย';
+            }).reduce((sum, m) => sum + m.quantity, 0);
+            
+            const totalSold = movements.filter(m => m.type === 'out' && m.reason === 'ขาย')
+                .reduce((sum, m) => sum + m.quantity, 0);
+            
+            const stockIns = movements.filter(m => m.type === 'in').length;
+            
+            document.getElementById('monthly-sales').textContent = monthlySales;
+            document.getElementById('total-sold').textContent = totalSold;
+            document.getElementById('stock-ins').textContent = stockIns;
+            document.getElementById('new-customers').textContent = Math.floor(Math.random() * 50) + 10;
+            
+            // Show top products
+            const topProductsContainer = document.getElementById('top-products');
+            topProductsContainer.innerHTML = '';
+            
+            // Calculate product sales
+            const productSales = {};
+            movements.forEach(m => {
+                if (m.type === 'out' && m.reason === 'ขาย') {
+                    if (!productSales[m.productId]) {
+                        productSales[m.productId] = 0;
+                    }
+                    productSales[m.productId] += m.quantity;
+                }
+            });
+            
+            // Get top 3 products
+            const topProductIds = Object.keys(productSales)
+                .sort((a, b) => productSales[b] - productSales[a])
+                .slice(0, 3);
+            
+            if (topProductIds.length === 0) {
+                topProductsContainer.innerHTML = '<div class="product-card"><div class="product-info"><div class="product-name">ไม่มีข้อมูลการขาย</div></div></div>';
+            } else {
+                topProductIds.forEach(productId => {
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        const productCard = createProductCard(product, productSales[productId]);
+                        topProductsContainer.appendChild(productCard);
+                    }
+                });
+            }
+        }
+        
+        // Render products list
+        function renderProducts() {
+            const searchTerm = searchProduct.value.toLowerCase();
+            const filter = document.querySelector('.filter-btn.active').dataset.filter;
+            
+            const filteredProducts = products.filter(product => {
+                const matchesSearch = product.name.toLowerCase().includes(searchTerm) || 
+                                     product.sku.toLowerCase().includes(searchTerm) ||
+                                     product.category.toLowerCase().includes(searchTerm);
+                
+                const matchesFilter = filter === 'all' || 
+                                    (filter === 'low' && product.stock < 5) ||
+                                    (filter === 'ok' && product.stock >= 5);
+                
+                return matchesSearch && matchesFilter;
+            });
+            
+            const productsContainer = document.getElementById('all-products');
+            productsContainer.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                productsContainer.innerHTML = '<div class="product-card"><div class="product-info"><div class="product-name">ไม่พบสินค้า</div></div></div>';
+            } else {
+                filteredProducts.forEach(product => {
+                    const productCard = createProductCard(product);
+                    productsContainer.appendChild(productCard);
+                });
+            }
+        }
+        
+        // Render movements list
+        function renderMovements() {
+            const filter = document.querySelector('[data-movement].active').dataset.movement;
+            
+            const filteredMovements = movements.filter(movement => {
+                return filter === 'all' || movement.type === filter;
+            }).reverse();
+            
+            const movementsContainer = document.getElementById('all-movements');
+            movementsContainer.innerHTML = '';
+            
+            if (filteredMovements.length === 0) {
+                movementsContainer.innerHTML = '<div class="movement-card"><div class="movement-info"><div class="movement-product">ไม่พบประวัติการเคลื่อนไหว</div></div></div>';
+            } else {
+                filteredMovements.forEach(movement => {
+                    const movementCard = createMovementCard(movement);
+                    movementsContainer.appendChild(movementCard);
+                });
+            }
+        }
+        
+        // Create product card element
+        function createProductCard(product, sales = null) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            const icon = getProductIcon(product.category);
+            
+            card.innerHTML = `
+                <div class="product-image">
+                    <i class="${icon}"></i>
+                </div>
+                <div class="product-info">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-sku">SKU: ${product.sku} | ${product.category}</div>
+                    ${sales ? `<div class="product-sku">ขายได้: ${sales} ชิ้น</div>` : ''}
+                </div>
+                <div class="product-stock">
+                    <div class="stock-value ${product.stock < 5 ? 'stock-low' : 'stock-ok'}">${product.stock}</div>
+                    <div class="stock-label">คงเหลือ</div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Create movement card element
+        function createMovementCard(movement) {
+            const card = document.createElement('div');
+            card.className = 'movement-card';
+            
+            const date = new Date(movement.date);
+            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            
+            card.innerHTML = `
+                <div class="movement-info">
+                    <div class="movement-product">${movement.productName}</div>
+                    <div class="movement-details">${formattedDate} | ${movement.reason}</div>
+                </div>
+                <div class="movement-amount ${movement.type === 'in' ? 'movement-in' : 'movement-out'}">
+                    ${movement.type === 'in' ? '+' : '-'}${movement.quantity}
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Get appropriate icon for product category
+        function getProductIcon(category) {
+            switch(category) {
+                case 'สมาร์ทโฟน': return 'fas fa-mobile-alt';
+                case 'แลปท็อป': return 'fas fa-laptop';
+                case 'หูฟัง': return 'fas fa-headphones';
+                case 'แท็บเล็ต': return 'fas fa-tablet-alt';
+                default: return 'fas fa-box';
+            }
+        }
+        
+        // Render stock chart
+        function renderChart() {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (stockChart) {
+                stockChart.destroy();
+            }
+            
+            // Prepare data for chart
+            const categories = [...new Set(products.map(p => p.category))];
+            const categoryData = categories.map(category => {
+                const categoryProducts = products.filter(p => p.category === category);
+                return categoryProducts.reduce((sum, p) => sum + p.stock, 0);
+            });
+            
+            // Create chart
+            stockChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: categoryData,
+                        backgroundColor: [
+                            '#4361ee', '#3f37c9', '#4cc9f0', '#f72585', '#560bad'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: getComputedStyle(document.body).getPropertyValue('--dark'),
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            toast.innerHTML = `
+                <div>
+                    <i class="fas ${icon}" style="margin-right: 10px;"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="close-toast">&times;</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Add close event
+            toast.querySelector('.close-toast').addEventListener('click', () => {
+                toast.remove();
+            });
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('products', JSON.stringify(products));
+            localStorage.setItem('movements', JSON.stringify(movements));
+        }
+        
+        // Add some sample data if empty
+        if (products.length === 0) {
+            products = [
+                {
+                    id: '1',
+                    name: 'iPhone 14 Pro',
+                    sku: 'APL-IP14P-256',
+                    category: 'สมาร์ทโฟน',
+                    stock: 5,
+                    price: 38900,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    name: 'MacBook Air M2',
+                    sku: 'APL-MBA-M2-256',
+                    category: 'แลปท็อป',
+                    stock: 12,
+                    price: 42900,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '3',
+                    name: 'AirPods Pro',
+                    sku: 'APL-APRP-01',
+                    category: 'หูฟัง',
+                    stock: 3,
+                    price: 8900,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '4',
+                    name: 'iPad Air',
+                    sku: 'APL-IPA-64',
+                    category: 'แท็บเล็ต',
+                    stock: 8,
+                    price: 21900,
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            movements = [
+                {
+                    id: '1',
+                    productId: '1',
+                    productName: 'iPhone 14 Pro',
+                    type: 'out',
+                    quantity: 2,
+                    reason: 'ขาย',
+                    date: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    productId: '2',
+                    productName: 'MacBook Air M2',
+                    type: 'in',
+                    quantity: 5,
+                    reason: 'ซื้อเข้า',
+                    date: new Date(Date.now() - 86400000).toISOString()
+                }
+            ];
+            
+            saveData();
+        }
+    </script>
+</body>
+</html>
